@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grid Azimuth & Range Calculator</title>
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    background: #1b1b1b;
+    color: #f0f0f0;
+    padding: 30px 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 900px;
+    margin: auto;
+    background: #292929;
+    border: 1px solid #444;
+    border-radius: 10px;
+    padding: 28px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.35);
+}
+
+h1 {
+    margin: 0 0 8px;
+    font-size: 26px;
+}
+
+.subtitle {
+    color: #aaa;
+    margin-bottom: 25px;
+    font-size: 14px;
+}
+
+.section {
+    background: #222;
+    border: 1px solid #3d3d3d;
+    border-radius: 8px;
+    padding: 18px;
+    margin-bottom: 18px;
+}
+
+h2 {
+    font-size: 17px;
+    margin: 0 0 15px;
+}
+
+.coordinate-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.description-row {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    font-size: 13px;
+    color: #bbb;
+    margin-bottom: 6px;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    background: #151515;
+    color: white;
+    border: 1px solid #555;
+    border-radius: 6px;
+    font-size: 16px;
+    outline: none;
+}
+
+input:focus {
+    border-color: #888;
+}
+
+button {
+    padding: 11px 16px;
+    background: #3f3f3f;
+    color: white;
+    border: 1px solid #666;
+    border-radius: 6px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #505050;
+}
+
+.primary {
+    width: 100%;
+    padding: 14px;
+    font-size: 17px;
+    margin-bottom: 18px;
+}
+
+.danger {
+    background: #542c2c;
+    border-color: #754444;
+}
+
+.danger:hover {
+    background: #693737;
+}
+
+.results {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.result-box {
+    background: #151515;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+}
+
+.result-label {
+    color: #aaa;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.result-value {
+    font-size: 34px;
+    font-weight: bold;
+}
+
+.unit {
+    font-size: 16px;
+    color: #aaa;
+    font-weight: normal;
+}
+
+.error {
+    color: #ff7777;
+    margin: -5px 0 15px;
+    font-size: 14px;
+    display: none;
+}
+
+.list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.list-header h2 {
+    margin: 0;
+}
+
+.record {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) 110px 130px auto;
+    gap: 15px;
+    align-items: center;
+    background: #151515;
+    border: 1px solid #444;
+    border-radius: 7px;
+    padding: 14px;
+    margin-bottom: 10px;
+}
+
+.record:last-child {
+    margin-bottom: 0;
+}
+
+.record-description {
+    font-weight: bold;
+    overflow-wrap: anywhere;
+}
+
+.record-value {
+    font-size: 16px;
+}
+
+.record-label {
+    display: block;
+    color: #888;
+    font-size: 11px;
+    margin-bottom: 3px;
+}
+
+.record-actions {
+    display: flex;
+    gap: 7px;
+}
+
+.record-actions button {
+    padding: 8px 11px;
+    font-size: 13px;
+}
+
+.empty {
+    text-align: center;
+    color: #888;
+    padding: 25px 10px;
+}
+
+.info {
+    color: #999;
+    font-size: 12px;
+    line-height: 1.5;
+    margin-top: 18px;
+}
+
+@media (max-width: 700px) {
+    .record {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .record-description {
+        grid-column: 1 / -1;
+    }
+
+    .record-actions {
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 500px) {
+    .coordinate-row,
+    .results {
+        grid-template-columns: 1fr;
+    }
+
+    body {
+        padding: 20px 10px;
+    }
+
+    .container {
+        padding: 20px;
+    }
+
+    .list-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Grid Azimuth & Range Calculator</h1>
+    <div class="subtitle">1.00 grid unit = 100 meters</div>
+
+    <div class="section">
+        <h2>Calculation</h2>
+
+        <div class="description-row">
+            <label for="description">Description</label>
+            <input id="description" type="text" placeholder="e.g. Enemy SAM Site">
+        </div>
+
+        <h2>Your Position</h2>
+
+        <div class="coordinate-row">
+            <div>
+                <label for="myX">X Coordinate</label>
+                <input id="myX" type="number" step="0.01" placeholder="XXX.XX">
+            </div>
+
+            <div>
+                <label for="myY">Y Coordinate</label>
+                <input id="myY" type="number" step="0.01" placeholder="XXX.XX">
+            </div>
+        </div>
+
+        <br>
+
+        <h2>Target Position</h2>
+
+        <div class="coordinate-row">
+            <div>
+                <label for="targetX">X Coordinate</label>
+                <input id="targetX" type="number" step="0.01" placeholder="XXX.XX">
+            </div>
+
+            <div>
+                <label for="targetY">Y Coordinate</label>
+                <input id="targetY" type="number" step="0.01" placeholder="XXX.XX">
+            </div>
+        </div>
+    </div>
+
+    <button class="primary" id="saveButton" onclick="saveRecord()">Calculate & Save</button>
+
+    <div class="error" id="error"></div>
+
+    <div class="section" id="resultSection" style="display:none;">
+        <h2>Current Result</h2>
+
+        <div class="results">
+            <div class="result-box">
+                <div class="result-label">AZIMUTH</div>
+                <div class="result-value">
+                    <span id="azimuth">---</span><span class="unit">°</span>
+                </div>
+            </div>
+
+            <div class="result-box">
+                <div class="result-label">RANGE</div>
+                <div class="result-value">
+                    <span id="range">---</span><span class="unit"> m</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="list-header">
+            <h2>Saved Results</h2>
+            <button class="danger" onclick="clearAll()">Clear All</button>
+        </div>
+
+        <div id="recordList">
+            <div class="empty">No saved results.</div>
+        </div>
+    </div>
+
+    <div class="info">
+        <strong>Coordinate convention:</strong><br>
+        X increases toward East.<br>
+        Y increases toward North.<br><br>
+        Azimuth is measured clockwise from North:
+        North = 000°, East = 090°, South = 180°, West = 270°.
+    </div>
+
+</div>
+
+<script>
+let records = [];
+let editingId = null;
+
+function calculateValues() {
+    const myX = parseFloat(document.getElementById("myX").value);
+    const myY = parseFloat(document.getElementById("myY").value);
+    const targetX = parseFloat(document.getElementById("targetX").value);
+    const targetY = parseFloat(document.getElementById("targetY").value);
+
+    if (
+        Number.isNaN(myX) ||
+        Number.isNaN(myY) ||
+        Number.isNaN(targetX) ||
+        Number.isNaN(targetY)
+    ) {
+        showError("Please enter all four coordinates.");
+        return null;
+    }
+
+    const deltaX = targetX - myX;
+    const deltaY = targetY - myY;
+    const metersPerUnit = 100;
+
+    const distanceUnits = Math.sqrt(
+        deltaX * deltaX +
+        deltaY * deltaY
+    );
+
+    const distanceMeters = distanceUnits * metersPerUnit;
+
+    let azimuth = Math.atan2(deltaX, deltaY) * (180 / Math.PI);
+    azimuth = (azimuth + 360) % 360;
+    azimuth = Math.round(azimuth) % 360;
+
+    return {
+        azimuth: azimuth,
+        range: distanceMeters
+    };
+}
+
+function saveRecord() {
+    const description = document.getElementById("description").value.trim();
+
+    if (!description) {
+        showError("Please enter a description.");
+        return;
+    }
+
+    const result = calculateValues();
+
+    if (!result) {
+        return;
+    }
+
+    hideError();
+
+    if (editingId !== null) {
+        const record = records.find(r => r.id === editingId);
+
+        if (record) {
+            record.description = description;
+            record.azimuth = result.azimuth;
+            record.range = result.range;
+        }
+
+        editingId = null;
+        document.getElementById("saveButton").textContent = "Calculate & Save";
+    } else {
+        records.push({
+            id: Date.now(),
+            description: description,
+            azimuth: result.azimuth,
+            range: result.range
+        });
+    }
+
+    displayCurrentResult(result);
+    renderRecords();
+    clearDescription();
+}
+
+function displayCurrentResult(result) {
+    document.getElementById("azimuth").textContent =
+        result.azimuth.toString().padStart(3, "0");
+
+    document.getElementById("range").textContent =
+        result.range.toFixed(1);
+
+    document.getElementById("resultSection").style.display = "block";
+}
+
+function editRecord(id) {
+    const record = records.find(r => r.id === id);
+
+    if (!record) {
+        return;
+    }
+
+    document.getElementById("description").value = record.description;
+
+    editingId = id;
+
+    document.getElementById("saveButton").textContent = "Update Result";
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+}
+
+function removeRecord(id) {
+    records = records.filter(r => r.id !== id);
+
+    if (editingId === id) {
+        editingId = null;
+        document.getElementById("saveButton").textContent = "Calculate & Save";
+        clearDescription();
+    }
+
+    renderRecords();
+}
+
+function clearAll() {
+    if (records.length === 0) {
+        return;
+    }
+
+    if (confirm("Remove all saved results?")) {
+        records = [];
+        editingId = null;
+        document.getElementById("saveButton").textContent = "Calculate & Save";
+        renderRecords();
+    }
+}
+
+function renderRecords() {
+    const list = document.getElementById("recordList");
+
+    if (records.length === 0) {
+        list.innerHTML = '<div class="empty">No saved results.</div>';
+        return;
+    }
+
+    list.innerHTML = records.map(record => `
+        <div class="record">
+            <div class="record-description">${escapeHtml(record.description)}</div>
+
+            <div class="record-value">
+                <span class="record-label">AZIMUTH</span>
+                ${record.azimuth.toString().padStart(3, "0")}°
+            </div>
+
+            <div class="record-value">
+                <span class="record-label">RANGE</span>
+                ${record.range.toFixed(1)} m
+            </div>
+
+            <div class="record-actions">
+                <button onclick="editRecord(${record.id})">Edit</button>
+                <button class="danger" onclick="removeRecord(${record.id})">Remove</button>
+            </div>
+        </div>
+    `).join("");
+}
+
+function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function clearDescription() {
+    document.getElementById("description").value = "";
+}
+
+function showError(message) {
+    const error = document.getElementById("error");
+    error.textContent = message;
+    error.style.display = "block";
+}
+
+function hideError() {
+    document.getElementById("error").style.display = "none";
+}
+
+document.addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+        saveRecord();
+    }
+});
+
+renderRecords();
+</script>
+
+</body>
+</html>
